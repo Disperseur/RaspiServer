@@ -2,8 +2,6 @@
 Serveur a executer sur la raspi
 */
 
-
-
 #include <iostream>
 #include <cstring>
 #include <string>
@@ -31,7 +29,7 @@ std::string getTimestamp() {
 // Fonction pour enregistrer les messages dans le fichier log
 void logMessage(const std::string& message) {
     std::ofstream logFile;
-    logFile.open("server_log.txt", std::ios_base::app); // Ouvre en mode append
+    logFile.open("/home/antoine/RaspiServer/server_log.txt", std::ios_base::app); // Ouvre en mode append
     if (logFile.is_open()) {
         logFile << getTimestamp() << " " << message << std::endl;
         logFile.close();
@@ -50,6 +48,14 @@ int main() {
     // Création du socket
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("Socket failed");
+        return -1;
+    }
+
+    // Configuration pour réutiliser l'adresse locale
+    int opt = 1;
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        perror("setsockopt failed");
+        close(server_fd);
         return -1;
     }
 
@@ -87,8 +93,6 @@ int main() {
         int client_port = ntohs(client_address.sin_port);
 
         std::cout << "Client connected: IP " << client_ip << ", Port " << client_port << "\n";
-
-       
 
         // Enregistrer le message d'accueil dans le fichier log
         logMessage("Client connected: IP " + std::string(client_ip) + ", Port " + std::to_string(client_port));
